@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Sunshine Inventory Management System (SIMS)</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/white.min.css">
+
+    <style>
+        /* Global Styles */
+        body {
+            background: #ffffff;
+            cursor: none;
+            /* Hide default cursor if we have a custom one, or keep it? varied preference. Let's keep default pointer for usability but add trail. */
+            cursor: default;
+        }
+
+        /* Logo Styling - Top Left Corner */
+        .cbs-logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 220px;
+            /* Made larger as requested */
+            z-index: 1000;
+            background: white;
+            border-radius: 4px;
+            padding: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Slide Content Alignment */
+        .reveal p,
+        .reveal ul,
+        .reveal ol {
+            text-align: left;
+        }
+
+        .reveal h2,
+        .reveal h3 {
+            text-transform: none;
+            /* Keep original casing if preferred */
+        }
+
+        /* Flow Chart Styles */
+        /* Button Styles */
+        .ctrl-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+
+        .ctrl-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .show-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        /* Node Styles */
+        .f-node {
+            position: absolute;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            opacity: 1;
+            font-weight: bold;
+            border: 2px solid transparent;
+            color: #fff;
+        }
+
+        .f-node.dimmed {
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
+
+        .f-node.highlight {
+            opacity: 1;
+            filter: none;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
+            transform: translateX(-50%) scale(1.05);
+            border-color: #2ecc71;
+        }
+
+        .f-oval {
+            width: 120px;
+            height: 40px;
+            border-radius: 20px;
+            background: #1f77b4;
+        }
+
+        .f-rect {
+            width: 160px;
+            height: 45px;
+            background: #1f77b4;
+            border-radius: 2px;
+        }
+
+        .f-diamond {
+            width: 80px;
+            height: 80px;
+            background: #f1c40f;
+            transform: translateX(-50%) rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+        }
+
+        .f-diamond span {
+            transform: rotate(-45deg);
+            font-size: 11px;
+            width: 140%;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        /* Connection & Flow Styles */
+        .f-conn {
+            transition: all 0.5s;
+            opacity: 1;
+            stroke: #1f77b4;
+        }
+
+        .f-conn.dimmed {
+            opacity: 0.2;
+            stroke: #ccc;
+        }
+
+        /* Electric Flow Animation */
+        .f-conn.flowing {
+            stroke: #2ecc71;
+            /* Green Current */
+            stroke-width: 3;
+            stroke-dasharray: 10 5;
+            animation: flowAnim 1s linear infinite;
+            opacity: 1;
+            marker-end: url(#arrow-active);
+        }
+
+        @keyframes flowAnim {
+            from {
+                stroke-dashoffset: 30;
+            }
+
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .lbl {
+            position: absolute;
+            font-size: 11px;
+            color: #333;
+            font-weight: bold;
+            background: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+
+        /* Popups */
+        .sim-pop {
+            position: absolute;
+            background: white;
+            border: 2px solid #333;
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 30;
+            display: none;
+            color: #333;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 160px;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .sim-btn {
+            margin: 5px;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+
+        .sim-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Screenshot Grid Styles - HORIZONTAL REFERENCE LAYOUT */
+        .sc-grid {
+            display: flex;
+            /* Using flex for horizontal alignment */
+            justify-content: center;
+            align-items: flex-end;
+            /* Align bottom like reference */
+            gap: 15px;
+            padding: 0;
+            width: 100%;
+            margin-top: 40px;
+        }
+
+        .sc-item {
+            background: transparent;
+            padding: 0;
+            border: none;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+            flex: 1;
+            /* Distribute space evenly */
+        }
+
+        .sc-item:hover {
+            transform: translateY(-15px) scale(1.05);
+            z-index: 10;
+        }
+
+        .sc-item img {
+            height: 60vh;
+            /* Fixed height for uniformity */
+            width: auto;
+            /* Auto width to maintain aspect ratio */
+            max-width: 100%;
+            aspect-ratio: 9/20;
+            /* Prohibit weird stretching */
+            object-fit: fill;
+            /* Fill the box as requested for uniformity */
+            border-radius: 12px;
+            display: block;
+            margin-bottom: 20px;
+            /* Rainbow Shadow Animation */
+            animation: rainbowShadow 4s infinite linear;
+            background: #000;
+        }
+
+        /* Staggered Animation Delays for "One by One" Effect */
+        .sc-item:nth-child(1) img {
+            animation-delay: 0s;
+        }
+
+        .sc-item:nth-child(2) img {
+            animation-delay: 1s;
+        }
+
+        .sc-item:nth-child(3) img {
+            animation-delay: 2s;
+        }
+
+        .sc-item:nth-child(4) img {
+            animation-delay: 3s;
+        }
+
+        @keyframes rainbowShadow {
+            0% {
+                box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
+                border: 2px solid rgba(255, 0, 0, 0.5);
+            }
+
+            20% {
+                box-shadow: 0 0 25px rgba(255, 255, 0, 0.9);
+                border: 2px solid rgba(255, 255, 0, 0.5);
+            }
+
+            40% {
+                box-shadow: 0 0 25px rgba(0, 255, 0, 0.9);
+                border: 2px solid rgba(0, 255, 0, 0.5);
+            }
+
+            60% {
+                box-shadow: 0 0 25px rgba(0, 255, 255, 0.9);
+                border: 2px solid rgba(0, 255, 255, 0.5);
+            }
+
+            80% {
+                box-shadow: 0 0 25px rgba(0, 0, 255, 0.9);
+                border: 2px solid rgba(0, 0, 255, 0.5);
+            }
+
+            100% {
+                box-shadow: 0 0 25px rgba(255, 0, 128, 0.9);
+                border: 2px solid rgba(255, 0, 128, 0.5);
+            }
+        }
+
+        .sc-item h4 {
+            font-size: 1em;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            color: #333;
+            text-shadow: none;
+        }
+
+        /* Colorful Confetti Cursor */
+        .confetti-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: confettiFade 0.8s ease-out forwards;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            /* Subtle shadow for white bg */
+        }
+
+        @keyframes confettiFade {
+            0% {
+                transform: scale(1) translateY(0);
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: scale(0.4) translateY(20px);
+                /* Falls down */
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Persistent Logo -->
+    <img src="sources/cbs_logo.png" class="cbs-logo" alt="CBS Logo">
+
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title & Team -->
+            <section>
+                <h2>Sunshine Inventory Management System</h2>
+                <div style="text-align: left; margin-top: 2em; display: inline-block;">
+                    <p style="margin-bottom: 0.5em;">Project Team Members:</p>
+                    <ol>
+                        <li>Adithya M - P02DR25S126OO1</li>
+                        <li>Lavanya M - P02DR25S126O12</li>
+                        <li>Reeta P - P02DR25S126O22</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Slide 2: Introduction -->
+            <section>
+                <h3>Introduction</h3>
+                <p style="font-size: 0.8em; line-height: 1.5;">
+                    Student Inventory Management System is a systematic approach used by educational institutions to
+                    record, monitor and control items issued or used by admin. These items include Abacus kit, K-math
+                    kit and uniform. The main goal of student inventory management is to ensure proper utilization of
+                    resources, reduce loss or damage, and maintain accurate records.
+                </p>
+            </section>
+
+            <!-- Slide 3: Client Requirements -->
+            <section>
+                <h3>CLIENT REQUIREMENTS</h3>
+                <ul style="font-size: 0.8em; line-height: 1.5;">
+                    <li>The client requires a Student Inventory Management System.</li>
+                    <li>The application is specially for kindergarten students.</li>
+                    <li>The system should manage Students uniforms.</li>
+                    <li>The system should manage K-Maths kits and Abacus kits.</li>
+                    <li>The system should help in managing inventory stock.</li>
+                    <li>The system should maintain accurate records of issued and available items.</li>
+                </ul>
+            </section>
+
+            <!-- Slide 4: Certificate of Approval -->
+            <section>
+                <h3>Certificate of Approval</h3>
+                <div style="background: white; padding: 10px; border-radius: 8px; display: inline-block;">
+                    <img src="sources/certificate_approval.png"
+                        style="max-height: 550px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                </div>
+            </section>
+
+            <!-- Slide 5: Objective -->
+            <section>
+                <h3>Objective Of The System</h3>
+                <ul style="font-size: 0.8em; line-height: 1.5;">
+                    <li>To maintain accurate records of the student inventory.</li>
+                    <li>To manage stock of uniforms and K-Maths and Abacus kits.</li>
+                    <li>To reduce manual work and paperwork.</li>
+                    <li>To provide a simple and mobile –friendly application.</li>
+                </ul>
+            </section>
+
+            <!-- Slide 5: System Flow Diagram (Interactive) -->
+            <section>
+                <h3>System Flow Diagram</h3>
+                <div id="flow-container"
+                    style="position: relative; width: 100%; height: 600px; margin: auto; background: #fff; border-radius: 8px; color: #fff; font-family: 'Arial', sans-serif; overflow: hidden; border: 1px solid #ddd; font-size: 13px;">
+
+                    <!-- Controls -->
+                    <div style="position: absolute; top: 10px; right: 10px; z-index: 20; display: flex; gap: 10px;">
+                        <button class="ctrl-btn start-btn" onclick="startSimulation()">
+                            ⚡ Start Simulation
+                        </button>
+                        <button class="ctrl-btn show-btn" onclick="showFullDiagram()">
+                            👁 Show Full Control
+                        </button>
+                    </div>
+
+                    <!-- SVG Layer -->
+                    <svg id="svg-layer"
+                        style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 1;">
+                        <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"
+                                markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="#1f77b4" />
+                            </marker>
+                            <marker id="arrow-active" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"
+                                markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="#2ecc71" />
+                            </marker>
+                        </defs>
+
+                        <!-- Defined Grid Paths with IDs -->
+                        <line id="l-1" class="f-conn" x1="50%" y1="60" x2="50%" y2="90" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+                        <line id="l-2" class="f-conn" x1="50%" y1="135" x2="50%" y2="170" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Valid Loopback (No) -->
+                        <path id="l-3" class="f-conn" d="M523,210 L650,210 L650,112 L570,112" fill="none"
+                            stroke="#1f77b4" stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Valid to Dash (Yes) -->
+                        <line id="l-4" class="f-conn" x1="50%" y1="250" x2="50%" y2="280" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Dash to Action -->
+                        <line id="l-5" class="f-conn" x1="50%" y1="325" x2="50%" y2="360" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Action to Distribute -->
+                        <line id="l-6" class="f-conn" x1="440" y1="400" x2="250" y2="400" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Action to Add Stock -->
+                        <line id="l-7" class="f-conn" x1="520" y1="400" x2="710" y2="400" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Left Branch Down -->
+                        <line id="l-8" class="f-conn" x1="180" y1="422" x2="180" y2="450" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+                        <line id="l-9" class="f-conn" x1="180" y1="495" x2="180" y2="520" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Right Branch Down -->
+                        <line id="l-10" class="f-conn" x1="780" y1="422" x2="780" y2="450" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+                        <line id="l-11" class="f-conn" x1="780" y1="495" x2="780" y2="520" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Merge to End -->
+                        <path id="l-12" class="f-conn" d="M180,570 L180,580 L480,580" fill="none" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+                        <path id="l-13" class="f-conn" d="M780,570 L780,580 L480,580" fill="none" stroke="#1f77b4"
+                            stroke-width="2" marker-end="url(#arrow)" />
+                    </svg>
+
+                    <!-- NODES LAYOUT -->
+
+                    <!-- 1. Start -->
+                    <div id="n-start" class="f-node f-oval" style="top: 20px; left: 50%;">Start</div>
+
+                    <!-- 2. Login -->
+                    <div id="n-login" class="f-node f-rect" style="top: 90px; left: 50%;">Login Page</div>
+
+                    <!-- 3. Valid? -->
+                    <div id="n-valid" class="f-node f-diamond" style="top: 170px; left: 50%;">
+                        <span>Valid Credentials?</span>
+                    </div>
+                    <div class="lbl" style="top: 190px; left: 600px;">No</div>
+                    <div class="lbl" style="top: 255px; left: 510px;">Yes</div>
+
+                    <!-- 4. Dashboard -->
+                    <div id="n-dash" class="f-node f-rect" style="top: 280px; left: 50%;">Dashboard</div>
+
+                    <!-- 5. Select Action -->
+                    <div id="n-action" class="f-node f-diamond" style="top: 360px; left: 50%;">
+                        <span>Select Action</span>
+                    </div>
+
+                    <!-- LEFT BRANCH -->
+                    <div id="n-dist" class="f-node f-rect" style="top: 377px; left: 18%; width: 140px;">Distribute Item
+                    </div>
+                    <div id="n-stud" class="f-node f-rect" style="top: 450px; left: 18%; width: 140px;">Enter Student
+                        Details</div>
+                    <div id="n-db1" class="f-node f-rect" style="top: 525px; left: 18%; width: 140px;">Update Database
+                    </div>
+
+                    <!-- RIGHT BRANCH -->
+                    <div id="n-add" class="f-node f-rect" style="top: 377px; left: 82%; width: 140px;">Add Stock</div>
+                    <div id="n-form" class="f-node f-rect" style="top: 450px; left: 82%; width: 140px;">Fill Inventory
+                        Form</div>
+                    <div id="n-db2" class="f-node f-rect" style="top: 525px; left: 82%; width: 140px;">Update Database
+                    </div>
+
+                    <!-- End -->
+                    <div id="n-end" class="f-node f-oval" style="top: 560px; left: 50%;">End</div>
+
+                    <!-- Popups -->
+                    <div id="sim-valid" class="sim-pop" style="top: 170px; left: 58%;">
+                        <p style="margin:0 0 10px 0; font-weight:bold;">Credentials Valid?</p>
+                        <button class="sim-btn" style="background:#2ecc71" onclick="simStep('valid_yes')">Yes
+                            (Proceed)</button>
+                        <button class="sim-btn" style="background:#e74c3c" onclick="simStep('valid_no')">No
+                            (Retry)</button>
+                    </div>
+
+                    <div id="sim-action" class="sim-pop" style="top: 360px; left: 58%;">
+                        <p style="margin:0 0 10px 0; font-weight:bold;">Select Operation:</p>
+                        <button class="sim-btn" style="background:#3498db"
+                            onclick="simStep('act_dist')">Distribute</button>
+                        <button class="sim-btn" style="background:#9b59b6" onclick="simStep('act_add')">Add
+                            Stock</button>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Slide 6: ER Diagram -->
+            <section>
+                <h3>ER Diagram</h3>
+                <div style="background: white; padding: 20px; border-radius: 8px;">
+                    <img src="sources/er_diagram_chen.png"
+                        style="max-height: 75vh; width: auto; object-fit: contain; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                </div>
+            </section>
+
+            <!-- Slide 7: App Screenshots -->
+            <section>
+                <h3>App Interface</h3>
+                <div class="sc-grid">
+                    <div class="sc-item">
+                        <img src="sources/distribute_tab_new.png" alt="Distribution">
+                        <h6>Distribute Tab</h5>
+                    </div>
+                    <div class="sc-item">
+                        <img src="sources/add_stock_tab_new.png" alt="Add Stock">
+                        <h5>Add Stocks</h5>
+                    </div>
+                    <div class="sc-item">
+                        <img src="sources/history_tab_new.png" alt="History">
+                        <h6>History Tab</h6>
+                    </div>
+                    <div class="sc-item">
+                        <img src="sources/home_light_theme.jpg" alt="Light Theme">
+                        <h6>Home Tab (Light Theme)</h6>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 7b: App Interface Continued -->
+            <section>
+                <h3>App Interface</h3>
+                <div class="sc-grid">
+                    <div class="sc-item">
+                        <img src="sources/login_page_new_v2.jpg" alt="Login">
+                        <h6>Login Page</h6>
+                    </div>
+                    <div class="sc-item">
+                        <img src="sources/forgot_password_new_v3.jpg" alt="Forgot Password">
+                        <h6>Forgot Password</h6>
+                    </div>
+                    <div class="sc-item">
+                        <img src="sources/profile_tab_new_v2.jpg" alt="Profile Tab">
+                        <h6>Profile Tab</h6>
+                    </div>
+                    <div class="sc-item">
+                        <img src="sources/home_tab_new_v2.jpg" alt="Home Tab">
+                        <h6>Home Tab</h6>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 8: Tools Used -->
+            <section>
+                <h3>Tools and Technologies Used</h3>
+                <div style="display: flex; justify-content: space-around; text-align: left; margin-top: 30px;">
+                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; width: 45%;">
+                        <h4
+                            style="color: #61dafb; font-size: 1.2em; border-bottom: 2px solid #000000; padding-bottom: 10px; margin-bottom: 20px;">
+                            IDE </h4>
+                        <ul style="font-size: 0.8em; line-height: 1.6; list-style-type: none; padding: 0;">
+                            <li style="margin-bottom: 10px;">Antigravity</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; width: 45%;">
+                        <h4
+                            style="color: #68bd45; font-size: 1.2em; border-bottom: 2px solid #000000; padding-bottom: 10px; margin-bottom: 20px;">
+                            AI models</h4>
+                        <ul style="font-size: 0.8em; line-height: 1.6; list-style-type: none; padding: 0;">
+                            <li style="margin-bottom: 10px;"> Gemini 3.0</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; width: 45%;">
+                        <h4
+                            style="color: #45b5bd; font-size: 1.2em; border-bottom: 2px solid #090e07; padding-bottom: 10px; margin-bottom: 20px;">
+                            code storage</h4>
+                        <ul style="font-size: 0.8em; line-height: 1.6; list-style-type: none; padding: 0;">
+                            <li style="margin-bottom: 10px;"> Github</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 9: Thank You -->
+            <section>
+                <div
+                    style="background: rgba(255,255,255,0.9); padding: 50px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h2 style="color: #2ecc71; margin-bottom: 20px; font-size: 3em;">Thank You!</h2>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            center: true,
+            hash: true,
+            transition: 'convex', // none/fade/slide/convex/concave/zoom
+            transitionSpeed: 'default', // default/fast/slow
+            backgroundTransition: 'zoom', // none/fade/slide/convex/concave/zoom
+        });
+
+        // Flow Chart Logic
+        let isSimulating = false;
+
+        function showFullDiagram() {
+            isSimulating = false;
+            resetVisuals();
+            document.querySelectorAll('.f-node').forEach(el => el.style.opacity = '1');
+            document.querySelectorAll('.f-conn').forEach(el => el.style.opacity = '1');
+        }
+
+        function resetVisuals() {
+            document.querySelectorAll('.f-node').forEach(el => {
+                el.classList.remove('dimmed', 'highlight');
+            });
+            document.querySelectorAll('.f-conn').forEach(el => {
+                el.classList.remove('dimmed', 'flowing');
+            });
+            document.querySelectorAll('.sim-pop').forEach(el => el.style.display = 'none');
+        }
+
+        function startSimulation() {
+            isSimulating = true;
+            resetVisuals();
+
+            // Dim everything
+            document.querySelectorAll('.f-node').forEach(el => el.classList.add('dimmed'));
+            document.querySelectorAll('.f-conn').forEach(el => el.classList.add('dimmed'));
+
+            // Step 1: Start
+            highlight('n-start');
+
+            // Animate to Login
+            setTimeout(() => {
+                activateFlow('l-1');
+                setTimeout(() => {
+                    activateFlow('l-1', false); // Stop flow
+                    highlight('n-login');
+
+                    // Animate to Valid
+                    setTimeout(() => {
+                        activateFlow('l-2');
+                        setTimeout(() => {
+                            activateFlow('l-2', false);
+                            highlight('n-valid');
+                            document.getElementById('sim-valid').style.display = 'block';
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            }, 500);
+        }
+
+        function highlight(id) {
+            if (!isSimulating) return;
+            document.querySelectorAll('.f-node').forEach(el => el.classList.remove('highlight')); // only single highlight maybe? keep it simple
+            const el = document.getElementById(id);
+            el.classList.remove('dimmed');
+            el.classList.add('highlight');
+        }
+
+        function activateFlow(lineId, isActive = true) {
+            const l = document.getElementById(lineId);
+            if (isActive) {
+                l.classList.remove('dimmed');
+                l.classList.add('flowing');
+            } else {
+                l.classList.remove('flowing');
+                l.classList.add('dimmed'); // return to handled state
+            }
+        }
+
+        window.simStep = function (action) {
+            if (action === 'valid_no') {
+                document.getElementById('sim-valid').style.display = 'none';
+                // Flow loopback logic
+                activateFlow('l-3'); // No path
+                setTimeout(() => {
+                    activateFlow('l-3', false);
+                    highlight('n-login');
+                    // Loop again
+                    setTimeout(() => {
+                        activateFlow('l-2');
+                        setTimeout(() => {
+                            activateFlow('l-2', false);
+                            highlight('n-valid');
+                            document.getElementById('sim-valid').style.display = 'block';
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            }
+            if (action === 'valid_yes') {
+                document.getElementById('sim-valid').style.display = 'none';
+                activateFlow('l-4'); // Yes path
+                setTimeout(() => {
+                    activateFlow('l-4', false);
+                    highlight('n-dash');
+                    setTimeout(() => {
+                        activateFlow('l-5');
+                        setTimeout(() => {
+                            activateFlow('l-5', false);
+                            highlight('n-action');
+                            document.getElementById('sim-action').style.display = 'block';
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            }
+            if (action === 'act_dist') {
+                document.getElementById('sim-action').style.display = 'none';
+                runBranch(['l-6', 'n-dist', 'l-8', 'n-stud', 'l-9', 'n-db1', 'l-12', 'n-end']);
+            }
+            if (action === 'act_add') {
+                document.getElementById('sim-action').style.display = 'none';
+                runBranch(['l-7', 'n-add', 'l-10', 'n-form', 'l-11', 'n-db2', 'l-13', 'n-end']);
+            }
+        };
+
+        function runBranch(sequence) {
+            // Sequence contains mix of lineIDs and nodeIDs
+            let step = 0;
+            function next() {
+                if (step >= sequence.length) return;
+                const id = sequence[step];
+                const isLine = id.startsWith('l-');
+
+                if (isLine) {
+                    activateFlow(id);
+                    setTimeout(() => {
+                        activateFlow(id, false);
+                        step++;
+                        next();
+                    }, 1000);
+                } else {
+                    highlight(id);
+                    step++;
+                    setTimeout(next, 500); // Shorter pause on nodes
+                }
+            }
+            next();
+        }
+
+        // Colorful Confetti Cursor Effect
+        const colors = ['#e74c3c', '#3498db', '#9b59b6', '#f1c40f', '#2ecc71', '#e67e22'];
+
+        document.addEventListener('mousemove', function (e) {
+            // Density control
+            if (Math.random() > 0.5) return;
+
+            const particle = document.createElement('div');
+            particle.className = 'confetti-particle';
+
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.background = color;
+
+            const size = Math.random() * 6 + 4;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+
+            particle.style.left = (e.pageX - size / 2) + 'px';
+            particle.style.top = (e.pageY - size / 2) + 'px';
+            document.body.appendChild(particle);
+
+            setTimeout(() => {
+                if (particle.parentNode) particle.parentNode.removeChild(particle);
+            }, 800);
+        });
+
+        document.addEventListener('click', function (e) {
+            // Burst Explosion on Click
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'confetti-particle';
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.background = color;
+
+                const size = Math.random() * 8 + 5;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+
+                // Scatter
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 80 + 20;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+
+                particle.style.left = e.pageX + 'px';
+                particle.style.top = e.pageY + 'px';
+
+                // Add initial transition for the burst
+                particle.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+
+                // Trigger animation
+                setTimeout(() => {
+                    particle.style.transform = `translate(${dx}px, ${dy}px) scale(0)`;
+                    particle.style.opacity = '0';
+                }, 10);
+
+                document.body.appendChild(particle);
+                setTimeout(() => {
+                    if (particle.parentNode) particle.parentNode.removeChild(particle);
+                }, 600);
+            }
+        });
+    </script>
+</body>
+
+</html>
